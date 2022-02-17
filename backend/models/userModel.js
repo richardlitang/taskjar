@@ -23,6 +23,11 @@ const userSchema = mongoose.Schema(
             default: false,
             require: true
         },
+        isBlocked: {
+            type: Boolean,
+            default: false,
+            require: true
+        },
         tasks: [
             {
                 type: mongoose.Schema.Types.ObjectId,

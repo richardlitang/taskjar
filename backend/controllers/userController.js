@@ -3,10 +3,18 @@ const bcrypt = require('bcryptjs')
 const asyncHandler = require('express-async-handler')
 const User = require('../models/userModel')
 
-const getToken = (id) => {
-  return jwt.sign({id}, process.env.JWT_SECRET, {
-    expiresIn: '30d'
-  })
+const generateToken = (user) => {
+  return jwt.sign(
+    {
+      _id: user._id,
+      isAdmin: user.isAdmin,
+      isPremium: user.isPremium
+    }, 
+    process.env.JWT_SECRET, 
+    {
+      expiresIn: '30d'
+    }
+  )
 }
 
 const loginUser = asyncHandler(async(req, res) => {
@@ -18,7 +26,7 @@ const loginUser = asyncHandler(async(req, res) => {
     res.status(200).json({
       _id: user._id,
       email: user.email,
-      token: getToken(user._id)
+      token: generateToken(user._id, user.isAdmin, user.isPremium)
     })
   } else {
     res.status(400) 
@@ -53,7 +61,7 @@ const registerUser = asyncHandler(async(req, res) => {
     res.status(200).json({
       _id: newUser.id,
       email: newUser.email,
-      token: getToken(newUser._id)
+      token: generateToken(newUser._id)
     })
   } else {
     res.status(400)
@@ -61,39 +69,45 @@ const registerUser = asyncHandler(async(req, res) => {
   }
 })
 
-//Does not work yet
 const getMe = asyncHandler(async(req, res) => {
-  const {_id, email} = await User.findById(req.user.id)
+  const {_id, email, isAdmin, isPremium, tasks} = await User.findById(req.user.id)
 
   res.status(200).json({
     id: _id,
-    email
+    email,
+    isAdmin,
+    isPremium,
+    tasks
   })
+})
 
-  throw new Error(`${req.user}`)
+// const getTasks = asyncHandler(async(req,res) => {
+//   const {_id, tasks} = await User.findById(req.user.id)
+
+//   res.status(200).json({
+//     tasks: tasks
+//   })
+// })
+
+
+//add some error catching
+const updateUserTasks = asyncHandler(async(req,res) => {
+  const user = await User.findById(req.user.id)
   
-})
+  const newTasks = [...user.tasks, req.body.tasks]
 
-const getTasks = asyncHandler(async(req,res) => {
-  const {_id, tasks} = await User.findById(req.user.id)
-
-  res.status(200).json({
-    tasks: tasks
-  })
-})
-
-const addTask = asyncHandler(async(req,res) => {
-  const {newTasks} = req.body
-  const {_id, tasks} = await User.findById(req.user.id)
+  user.tasks = newTasks
+  
+  const updatedUser = await User.findByIdAndUpdate(user._id, user, {new: true})
 
   res.status(200).json({
-    tasks: [...tasks, newTasks]
+    updatedUser
   })
 })
-
 
 module.exports = {
   getMe,
   loginUser,
-  registerUser
+  registerUser,
+  updateUserTasks
 }

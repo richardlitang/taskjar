@@ -4,14 +4,14 @@ const {
   registerUser,
   loginUser,
   getMe,
-  getTasks,
-  updateTasks
+  // getTasks,
+  updateUserTasks
 } = require('../controllers/userController')
-// const { protect } = require('../middleware/authMiddleware')
+const { requireAuth } = require('../middleware/authMiddleware')
 
 router.route('/register').post(registerUser)
 router.route('/login').post(loginUser)
-router.route('/me').get(getMe)
-router.route('/:id/goals').put(updateUser)
+router.route('/me').get(requireAuth, getMe)
+router.route('/tasks').put(requireAuth, updateUserTasks)
 
 module.exports = router

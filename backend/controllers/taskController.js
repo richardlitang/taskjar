@@ -2,10 +2,16 @@ const asyncHandler = require('express-async-handler')
 
 const Task = require('../models/taskModel')
 
-const getTask = asyncHandler(async (req, res) => {
+const getTasks = asyncHandler(async (req, res) => {
     const tasks = await Task.find()
 
     res.status(200).json(tasks)
+})
+
+const getOneTask = asyncHandler(async (req, res) => {
+    const task = await Task.aggregate([{$sample: {size: 1}}])
+
+    res.status(200).json(task)
 })
 
 const addTask = asyncHandler(async (req, res) => {
@@ -22,41 +28,14 @@ const addTask = asyncHandler(async (req, res) => {
         tags: [req.body.tags]
     })
 
-    const addTag = await 
+    // const addTag = await 
 
     res.status(200).json(task)
 })
 
-// const updateTask = asyncHandler(async (req, res) => {
-//     const task = await Task.findById(req.params.id)
-  
-//     if (!task) {
-//       res.status(400)
-//       throw new Error('Task not found')
-//     }
-  
-//     const user = await User.findById(req.user.id)
-
-//     if (!user) {
-//       res.status(401)
-//       throw new Error('User not found')
-//     }
-  
-//     if (task.user.toString() !== user.id) {
-//       res.status(401)
-//       throw new Error('User not authorized')
-//     }
-  
-//     const updatedTask = await task.findByIdAndUpdate(req.params.id, req.body, {
-//       new: true,
-//     })
-  
-//     res.status(200).json(updatedTask)
-//   })
-
-
 
 module.exports = {
-    getTask,
-    addTask
+    getTasks,
+    addTask,
+    getOneTask
 }
