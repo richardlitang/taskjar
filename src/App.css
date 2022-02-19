@@ -1,23 +1,5 @@
-.App {
+.app {
   text-align: center;
-}
-
-.task {
-  margin: 150px auto;
-}
-
-.task_name {
-  font-size: 4rem;
-  font-weight: 600;
-  margin: 15px auto;
-  display: block;
-}
-
-.task_description {
-  font-size: 2rem;
-  display: block;
-}
-
-.task_search {
-  margin: 50px auto;
+  min-height: 100vh;
+  margin: 0;
 }
