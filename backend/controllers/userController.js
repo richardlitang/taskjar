@@ -105,9 +105,20 @@ const updateUserTasks = asyncHandler(async(req,res) => {
   })
 })
 
+const getUserTasks = asyncHandler(async(req,res) => {
+  const user = await User.findById(req.user.id)
+  
+  const tasks = await user.tasks
+
+  res.status(200).json({
+    tasks
+  })
+})
+
 module.exports = {
   getMe,
   loginUser,
   registerUser,
+  getUserTasks,
   updateUserTasks
 }
