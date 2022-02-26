@@ -101,7 +101,7 @@ const updateUserTasks = asyncHandler(async(req,res) => {
   const updatedUser = await User.findByIdAndUpdate(user._id, user, {new: true})
 
   res.status(200).json({
-    updatedUser
+    message: updatedUser.tasks
   })
 })
 
