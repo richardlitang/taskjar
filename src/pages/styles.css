@@ -1,3 +1,7 @@
+body {
+    margin: 0
+}
+
 .home {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
@@ -28,26 +32,38 @@
 
 .sidebar__profile-name {
     display: block;
-    padding-top: 0.7rem;
-    font-size: 14px;
+    padding-top: 15px;
+    font-size: 1rem;
 }
 
 .sidebar__profile-title {
-    font-size: 0.5rem;
+    font-size: 0.8rem;
     display: block;
 }
 
 .sidebar__navigation {
-    font-size: 0.7rem;
+    font-size: 1rem;
     text-align: start;
     align-self:start;
     margin-top: 20px;
+    width: 100%;
 }
  
 .sidebar__navigation-list a {
-    font-size: 0.5rem;
+    display: inline-block;
+    font-size: 0.8rem;
     text-decoration: none;
+    padding: 5px 0;
     color: #000;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.sidebar__navigation-list a:hover {
+    width: 100%;
+    background-color: #ff5765;
+    padding-left: 3px;
+    border-radius: 1px;
 }
 
 .sidebar__navigation-list {
@@ -69,11 +85,11 @@
 }   
 
 .greetings__main {
-    font-size: 15px;
+    font-size: 1.5rem;
 }
 
 .greetings__subtitle {
-    font-size: 12px;
+    font-size: 1rem;
 }
 
 .task {
@@ -88,8 +104,14 @@
     background: linear-gradient(#FF5765, #8A6FDF);
     color: white;
     margin-top: 20px;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
+.task:hover {
+    transform: scale(1.005);
+}
+    
 .task__name {
     font-size: 4.5vw;
     word-wrap: break-word;
@@ -108,7 +130,7 @@
     border-left-color: rgba(196, 196, 196, 0.199);
     border-left-width: 1px;
     padding-top: 20px;
-    height: 93vh;
+    /* height: 93vh; */
 } 
 
 .user__collections-title {
@@ -116,3 +138,25 @@
     font-weight: 500;
 }
 
+/* Forms */
+
+.form-group {
+    margin-bottom: 10px;
+  }
+  
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e6e6e6;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-family: inherit;
+  }
+  
+  .form-group label {
+    text-align: left;
+    display: block;
+    margin: 0 0 5px 3px;
+  }
