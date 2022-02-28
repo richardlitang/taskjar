@@ -138,6 +138,23 @@ body {
     font-weight: 500;
 }
 
+.user__collections-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.user__task-board {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.user__task-board-item {
+    word-wrap: break-word;
+    padding: 10px;
+    background-color: yellow;
+    margin: 5px;
+    border-radius: 10px;
+}
 /* Forms */
 
 .form-group {
@@ -160,3 +177,4 @@ body {
     display: block;
     margin: 0 0 5px 3px;
   }
+
