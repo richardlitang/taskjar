@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useReducer } from 'react';
 import {Task, Category} from '../types/types'
 import './styles.css'
 import {Link} from 'react-router-dom'
@@ -7,104 +7,116 @@ import { faListCheck } from '@fortawesome/free-solid-svg-icons'
 import AddUserTask from '../components/ui/AddUserTask';
 import {DragDropContext, Droppable, Draggable, DropResult, DraggableLocation} from 'react-beautiful-dnd'
 import e from 'express';
+import Tasks from './Tasks';
+import { act } from 'react-dom/test-utils';
+import { defaultCipherList } from 'constants';
 
 export default function Home() {
- 
+
+  // const rawUser = localStorage.getItem('user')
+  // let userItems: Category[] = [];
+
+  // if (rawUser) {
+  //   userItems = JSON.parse(rawUser)
+  // }
+
+  // let defaultCategory = userItems
+  
     const idGenerator = () => {
       const tempId =  "" + Date.now() + (Math.floor(Math.random() * Math.pow(10, 3)))
       return parseInt(tempId)
     }
 
-    const [edit, setEdit] = useState<boolean>(false);
-    const [userTask, setUserTask] = useState<Task>()
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    const [newInput, setNewInput] = useState<string>('')
-
-    const rawUser = localStorage.getItem('user')
-    let userTasks: Task[] = [];
-
-    if (rawUser) {
-      userTasks = JSON.parse(rawUser)
+    interface Action {
+      type: string,
+      name?: string,
+      category: Category["id"]
     }
+    
+    const initialCategories: Category[] = [
+      {
+        id: 0,
+        name: 'defaultCategory',
+        tasks: [{name: 'Hey', id: idGenerator()}]
+      }
+    ]
+    
 
-    const [localTasks, setLocalTasks] = useState<Task[]>(userTasks)
-    const [categories, setCategories] = useState<Category[]>([])
+    // const stringDefaultCat = JSON.stringify([defaultCategory])
 
-    const transferCategory = (sourceList: Category, destinationList: Category, draggableSource: DraggableLocation, draggableDestination: DraggableLocation | undefined ) => {
-      const sourceCopy = sourceList;
-      const destinationCopy = destinationList;
-      const [removed] = sourceCopy.tasks.splice(draggableSource.index, 1);
+    // localStorage.setItem('user', stringDefaultCat)
 
-      if (!draggableDestination) {
-        return;
+    const [categories, dispatch] = useReducer((state: Category[], action: Action) => {
+      // const categoryIndex = state.findIndex(category => category.id === action.category.id)
+
+      if (!action.name) {
+        return state;
       }
 
-      destinationCopy.tasks.splice(draggableDestination.index, 0, removed);
-
-      const result: Category[] = [];
-      result[parseInt(draggableSource.droppableId)] = sourceCopy;
-      result[parseInt(draggableDestination.droppableId)] = destinationCopy;
+      const newTask: Task = {name: action.name, id: idGenerator()}
+      
+      switch (action.type) {
+        case 'add':
+          return state.map((category) => {
+            if (category.id === action.category) {
+              return {
+                ...category,
+                tasks: [...category.tasks, newTask]
+              }
+            }
+            return category;
+          });
+        default:
+          return state;
+      }
+    }, initialCategories);
     
-      return result;
-    };
-    
-    const handleNewTask = (event: React.FormEvent, )  => {
+    const handleSubmit = (event: React.FormEvent )  => {
       event.preventDefault()
-      const newTask = {name: newInput, id: idGenerator()}
-      setLocalTasks([...localTasks, newTask])
-    }
-    
-    const onDragEnd = (result: DropResult) => {
-      const {source, destination} = result;
+      dispatch({
+        type: 'add',
+        name: inputRef.current?.value,
+        category: 0
+      });
 
-      if (!destination) {
-        return;
-      }
-
-      const sourceId = parseInt(source.droppableId);
-      const destinationId = parseInt(destination.droppableId);
-
-      if (sourceId === destinationId) {
-        const newTaskList = [...localTasks];
-        const [removed] = newTaskList.splice(source.index, 1)
-        newTaskList.splice(destination.index, 0, removed)
-        setLocalTasks(newTaskList)
-      } else {
-        const result = transferCategory(categories[sourceId], categories[destinationId], source, destination)
-
-        if (!result) {
-          return;
-        }
-        setCategories(result)
-      }
+      inputRef.current!.value = '';
+      // const newTask = {name: newInput, id: idGenerator()}
+      // setLocalTasks([...localTasks, newTask])
     }
 
     useEffect(() => {
-      const updatedTasks = JSON.stringify(localTasks)
-      localStorage.setItem('user', updatedTasks)
-    }, [localTasks])
+      const updatedCategories = JSON.stringify(categories)
+      localStorage.setItem('user', updatedCategories)
+    }, [categories])
+
+    // console.log(items)
+    const onDragEnd = (result: DropResult) => {}
+  
 
     const fetchTask = async () => {
-      await fetch('http://localhost:5000/api/tasks').
-        then(response => response.json()).
-        then(data => setUserTask(data[0]))
+      // await fetch('http://localhost:5000/api/tasks').
+      //   then(response => response.json()).
+      //   then(data => setUserTask(data[0]))
     } 
 
     const fetchLocalTask = async () => {
-      const randomIndex = Math.floor((Math.random()*localTasks.length));
-      setUserTask(localTasks[randomIndex])
+      // const randomIndex = Math.floor((Math.random()*localTasks.length));
+      // setUserTask(localTasks[randomIndex])
     } 
 
     useEffect(() => {
-      fetchTask().catch(console.error)
+      // fetchTask().catch(console.error)
     }, [])
 
-    const inputRef = useRef<HTMLInputElement>(null);
+    // const [edit, setEdit] = useState<boolean>(false);
+    // const inputRef = useRef<HTMLInputElement>(null);
+    // useEffect(() => {
+    //   inputRef.current?.focus();
+    // }, [edit]);
 
-    useEffect(() => {
-      inputRef.current?.focus();
-    }, [edit]);
-
+    console.log(categories)
     return (
       <div className="home">
         <div className="sidebar">
@@ -126,8 +138,8 @@ export default function Home() {
           <span className="greetings__subtitle">Ready to do some work?</span> 
         </div>
         <div className="task">
-          <span className="task__name">{userTask?.name}</span>
-          <span className="task__description">{userTask?.description}</span>
+          {/* <span className="task__name">{userTask?.name}</span>
+          <span className="task__description">{userTask?.description}</span> */}
           <button className="task__search" onClick = {fetchTask}>
             Find a task
           </button>
@@ -139,80 +151,50 @@ export default function Home() {
           <div className="user__collections-form">
             <div className="user__task-board">
               <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="0">
-                  {(provided, snapshot) => (  
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                    >
-                      <p>First</p>
-                      {localTasks.map((task, index) => {
-                        return <Draggable 
-                          draggableId={task.id.toString()} 
-                          key={task.id}
-                          index={index}
-                        >
-                          {(provided, snapshot) => (
-                            <div 
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className="user__task-board-item"
-                            >
-                              <span>{task.name}</span>
-                            </div>
-                          )}
-
-                        </Draggable>
-                      })}
-                      {provided.placeholder}  
-                    </div>
-                  )}
-                </Droppable>
-                {/* <Droppable droppableId="1">
-                  {(provided, snapshot) => (  
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                    >
-                      <p>Second</p>
-                      {localTasks.map((task, index) => {
-                        return <Draggable 
-                          draggableId={task.id.toString()} 
-                          key={task.id}
-                          index={index}
-                        >
-                          {(provided, snapshot) => (
-                            <div 
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className="user__task-board-item"
-                            >
-                              <span>{task.name}</span>
-                            </div>
-                          )}
-
-                        </Draggable>
-                      })}
-                      {provided.placeholder}  
-                    </div>
-                  )}
-                </Droppable> */}
+                {categories.map(category => {
+                   return <Droppable droppableId="0">
+                   {(provided, snapshot) => (  
+                     <div
+                       ref={provided.innerRef}
+                       {...provided.droppableProps}
+                     >
+                       <p>{category.name}</p>
+                       {category.tasks.map((task, index) => {
+                         console.log(task)
+                         return <Draggable 
+                           draggableId={task.id.toString()} 
+                           key={task.id}
+                           index={index}
+                         >
+                           {(provided, snapshot) => (
+                             <div 
+                               ref={provided.innerRef}
+                               {...provided.draggableProps}
+                               {...provided.dragHandleProps}
+                               className="user__task-board-item"
+                             >
+                               <span>{task.name}</span>
+                             </div>
+                           )}
+ 
+                         </Draggable>
+                       })}
+                       {provided.placeholder}  
+                     </div>
+                   )}
+                 </Droppable>
+                }  
+                )}
+               
               </DragDropContext>
             </div>
-              
               <form 
                 className="user__task-form" 
-                onSubmit={handleNewTask}
+                onSubmit={handleSubmit}
                 >
                 <input 
                   type="text" 
                   className="user__task-input" 
-                  value={newInput} 
-                  onChange={(e) => {
-                    setNewInput(e.target.value)
-                  }}
                   ref={inputRef}
                 />
                 <button 
