@@ -13,6 +13,15 @@ export interface Collection {
 }   
 
 
+export interface Action {
+    type: string,
+    name?: string,
+    collection?: number,
+    updatedCollection?: Collection,
+    updatedSource?: Collection,
+    updatedDestination?: Collection
+}
+
 export interface AddTaskProps {
     task: string;
     setTask: React.Dispatch<React.SetStateAction<string>>;
