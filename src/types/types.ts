@@ -6,7 +6,7 @@ export interface Task {
     upvotes?: number
 }   
 
-export interface Category {
+export interface Collection {
     id: number,
     name: string,
     tasks: Task[]

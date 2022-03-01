@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useReducer } from 'react';
-import {Task, Category} from '../types/types'
+import {Task, Collection} from '../types/types'
 import './styles.css'
 import {Link} from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -14,13 +14,13 @@ import { defaultCipherList } from 'constants';
 export default function Home() {
 
   // const rawUser = localStorage.getItem('user')
-  // let userItems: Category[] = [];
+  // let userItems: collection[] = [];
 
   // if (rawUser) {
   //   userItems = JSON.parse(rawUser)
   // }
 
-  // let defaultCategory = userItems
+  // let Next Up = userItems
   
     const idGenerator = () => {
       const tempId =  "" + Date.now() + (Math.floor(Math.random() * Math.pow(10, 3)))
@@ -32,53 +32,63 @@ export default function Home() {
     interface Action {
       type: string,
       name?: string,
-      category: Category["id"]
+      collection?: number,
+      updatedCollectionTasks?: Task[]
     }
-    
-    const initialCategories: Category[] = [
-      {
-        id: 0,
-        name: 'defaultCategory',
-        tasks: [{name: 'Hey', id: idGenerator()}]
-      }
-    ]
-    
 
-    // const stringDefaultCat = JSON.stringify([defaultCategory])
+    const localData = localStorage.getItem('user')
+    let initialCollections: Collection[] = [];
 
-    // localStorage.setItem('user', stringDefaultCat)
+    if (localData) {
+      initialCollections= JSON.parse(localData)
+    } else {
+      initialCollections =  [
+        {
+          id: 0,
+          name: 'Next Up',
+          tasks: [{name: 'Full body stretch', id: idGenerator()}]
+        }
+      ]
+    }
 
-    const [categories, dispatch] = useReducer((state: Category[], action: Action) => {
-      // const categoryIndex = state.findIndex(category => category.id === action.category.id)
-
-      if (!action.name) {
-        return state;
-      }
-
-      const newTask: Task = {name: action.name, id: idGenerator()}
-      
+    const [collections, dispatch] = useReducer((state: Collection[], action: Action) => {
+      // const collectionIndex = state.findIndex(collection => collection.id === action.payload.id)
       switch (action.type) {
-        case 'add':
-          return state.map((category) => {
-            if (category.id === action.category) {
+        case 'reorder':
+          return state.map((collection) => {
+            if (collection.id === action.collection) {
               return {
-                ...category,
-                tasks: [...category.tasks, newTask]
+                ...collection,
+                tasks: [...action.updatedCollectionTasks!]
               }
             }
-            return category;
-          });
+          return collection;
+        });
+        case 'add':
+          if (!action.name) {
+            return state;
+          }
+          const newTask: Task = {name: action.name, id: idGenerator()}
+          return state.map((collection) => {
+            if (collection.id === action.collection) {
+              return {
+                ...collection,
+                tasks: [...collection.tasks, newTask]
+              }
+            }
+          return collection;
+        });
         default:
           return state;
       }
-    }, initialCategories);
+    }, initialCollections);
     
     const handleSubmit = (event: React.FormEvent )  => {
       event.preventDefault()
       dispatch({
         type: 'add',
         name: inputRef.current?.value,
-        category: 0
+        collection: 0
       });
 
       inputRef.current!.value = '';
@@ -86,13 +96,55 @@ export default function Home() {
       // setLocalTasks([...localTasks, newTask])
     }
 
-    useEffect(() => {
-      const updatedCategories = JSON.stringify(categories)
-      localStorage.setItem('user', updatedCategories)
-    }, [categories])
 
-    // console.log(items)
-    const onDragEnd = (result: DropResult) => {}
+
+    const onDragEnd = (result: DropResult) => {
+      const {source, destination} = result;
+
+      if (!destination) {
+        return;
+      }
+
+      const sourceId = parseInt(source.droppableId);
+      const destinationId = parseInt(destination.droppableId);
+
+      if (sourceId === destinationId) {
+        const changedCollection = collections.find((collection: Collection) => collection.id === destinationId)
+
+        if (changedCollection) {
+          const newCollectionTasks = [...changedCollection.tasks]
+          const [removed] = newCollectionTasks.splice(source!.index, 1)
+          newCollectionTasks.splice(destination!.index, 0, removed)
+
+          dispatch({
+            type: 'reorder',
+            collection: changedCollection.id,
+            updatedCollectionTasks: newCollectionTasks
+          })
+        }
+      } else {
+        
+      }
+
+
+
+        // dispatch({
+        //   type: 'reorder',
+        //   name: inputRef.current?.value,
+        //   source: source,
+        //   destination: destination,
+        //   collection: 0
+        // });
+      
+      // else {
+      //   const result = transferCategory(categories[sourceId], categories[destinationId], source, destination)
+
+      //   if (!result) {
+      //     return;
+      //   }
+      //   setCategories(result)
+      // }
+    }
   
 
     const fetchTask = async () => {
@@ -106,17 +158,21 @@ export default function Home() {
       // setUserTask(localTasks[randomIndex])
     } 
 
-    useEffect(() => {
-      // fetchTask().catch(console.error)
-    }, [])
+    // useEffect(() => {
+    //   // fetchTask().catch(console.error)
+    // }, [])
 
     // const [edit, setEdit] = useState<boolean>(false);
     // const inputRef = useRef<HTMLInputElement>(null);
     // useEffect(() => {
     //   inputRef.current?.focus();
     // }, [edit]);
-
-    console.log(categories)
+    
+    useEffect(() => {
+      const updatedCollections = JSON.stringify(collections)
+      localStorage.setItem('user', updatedCollections)
+    }, [JSON.stringify(collections)])
+    
     return (
       <div className="home">
         <div className="sidebar">
@@ -151,16 +207,15 @@ export default function Home() {
           <div className="user__collections-form">
             <div className="user__task-board">
               <DragDropContext onDragEnd={onDragEnd}>
-                {categories.map(category => {
-                   return <Droppable droppableId="0">
+                {collections.map((collection: Collection) => {
+                   return <Droppable droppableId={JSON.stringify(collection.id)} key={collection.id}>
                    {(provided, snapshot) => (  
                      <div
                        ref={provided.innerRef}
                        {...provided.droppableProps}
                      >
-                       <p>{category.name}</p>
-                       {category.tasks.map((task, index) => {
-                         console.log(task)
+                       <p>{collection.name}</p>
+                       {collection.tasks.map((task, index) => {
                          return <Draggable 
                            draggableId={task.id.toString()} 
                            key={task.id}
