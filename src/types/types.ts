@@ -17,6 +17,7 @@ export interface Action {
     type: string,
     name?: string,
     collection?: number,
+    task?: number,
     updatedCollection?: Collection,
     updatedSource?: Collection,
     updatedDestination?: Collection
