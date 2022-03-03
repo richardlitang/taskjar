@@ -9,6 +9,7 @@ const {
 } = require('../controllers/userController')
 const { requireAuth } = require('../middleware/authMiddleware')
 
+//test
 router.route('/register').post(registerUser)
 router.route('/login').post(loginUser)
 router.route('/me').get(requireAuth, getMe)
