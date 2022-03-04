@@ -15,6 +15,7 @@ export default function Home() {
   const [userName, setUserName] = useState<string>(initialUserName)
   const [collections, setCollections] = useState<Collection[]>([])
   const [chosenTask, setChosenTask] = useState<Task>({name:'', id: idGenerator()})
+  const [chosenCollection, setChosenCollection] = useState<string>('')
   const [hidden, setHidden] = useState<Boolean>(true)
   const [edit, setEdit] = useState<boolean>(false);
 
@@ -25,6 +26,7 @@ export default function Home() {
     const randomCollection = Math.floor((Math.random() * nonEmptyCollections.length));
     const randomTask = Math.floor((Math.random() * nonEmptyCollections[randomCollection].tasks.length));  
     setChosenTask(nonEmptyCollections[randomCollection].tasks[randomTask]) 
+    setChosenCollection(nonEmptyCollections[randomCollection].name)
     setHidden(true)
   } 
 
@@ -73,8 +75,9 @@ export default function Home() {
           <span className="greetings__subtitle">Ready to do some work?</span> 
         </div>
         <div className={hidden? "task__full-page" : "task" }>
-          <h1>{chosenTask.name}</h1>
-          <button className="task__search" onClick={fetchTask}>
+          <h1 className="task__ name">{chosenTask.name}</h1>
+          <span className="task__collection">{chosenCollection}</span>
+          <button className="task__search-button" onClick={fetchTask}>
             Find a task
           </button>
           <FontAwesomeIcon 
