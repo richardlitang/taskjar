@@ -11,6 +11,8 @@ body {
     grid-auto-columns: minmax(260px, 1fr);
 }
 
+/* Sidebar section */
+
 .sidebar {
     display: flex;
     flex-flow: column nowrap;
@@ -71,6 +73,8 @@ body {
     padding-left: 0;
 }
 
+/* Greetings section */
+
 .greetings {
     display: flex;
     flex-flow: column wrap;
@@ -79,7 +83,6 @@ body {
     grid-column: 3 / 10;;
     grid-row: 1 / 2;
     margin: 0 2.5vw;
-    /* padding-left: 50px; */
 }   
 
 .greetings__main {
@@ -90,7 +93,9 @@ body {
     font-size: 1rem;
 }
 
-.task {
+/* Finders section */
+
+.finder {
     display: flex;
     font-size: 1.5rem;
     flex-flow: column nowrap;
@@ -108,22 +113,22 @@ body {
     margin: 20px 2.5vw;
 }
 
-.task:hover {
+.finder:hover {
     transform: scale(1.008);
     color: white;
     background-image: radial-gradient(100% 100% at 100% 0, #ff5765be  0%, #476de9 100%);
 }
 
-.task__name {
+.finder__name {
     font-size: 5rem;
 }
 
-.task__collection {
+.finder__collection {
     font-size: 1.2rem;
     margin-top: 10px;
 }
 
-.task__full-page {
+.finder__full-page {
     display: flex;
     position: relative;
     flex-direction: column;
@@ -149,20 +154,18 @@ body {
     }
 }
 
-.task__search-button {
+.finder__search-button {
     border: 0;
     border-radius: 4px;
     box-shadow: #2d234266 0 2px 4px,#2d23424d 0 7px 13px -3px,#3a416f80 0 -3px 0 inset;
     box-sizing: border-box;
     cursor: pointer;
     display: inline-flex;
-    height: 36px;
     justify-content: center;
     line-height: 1;
     list-style: none;
     overflow: hidden;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding: 14px 28px;
     position: relative;
     text-align: left;
     text-decoration: none;
@@ -178,59 +181,66 @@ body {
     margin: 40px auto 0 auto;
 }
 
-.task__search-button:focus {
-  box-shadow: #cdd1f0 0 0 0 1.5px inset, rgba(45, 35, 66, .4) 0 2px 4px, rgba(45, 35, 66, .3) 0 7px 13px -3px, #3c4fe0 0 -3px 0 inset;
+.finder__search-button:focus {
+  box-shadow: #cdd1f0 0 0 0 1.5px inset, #2d234266 0 2px 4px, #2d23424d 0 7px 13px -3px, #3c4fe0 0 -3px 0 inset;
 }
 
-.task__search-button:hover {
+.finder__search-button:hover {
     background-image: radial-gradient(100% 100% at 100% 0, #ff5765be  0%, #476de9 100%);
-    box-shadow: rgba(45, 35, 66, .4) 0 4px 8px, rgba(45, 35, 66, .3) 0 7px 13px -3px, #cdcfdf 0 -3px 0 inset;
+    box-shadow: #2d234266 0 4px 8px, #2d23424d 0 7px 13px -3px, #cdcfdf 0 -3px 0 inset;
     transform: translateY(-1px);
     color: white;
 }
 
-.task__search-button:active {
+.finder__search-button:active {
   box-shadow: #90a3e2 0 3px 7px inset;
   transform: translateY(2px);
   color: white;
 }
 
-.task__full-page-close-icon {
+.finder__full-page-close-icon {
     position: absolute;
-    right: 2vw;
+    right: 3.5vw;
     top: 2vw;
-    font-size: 20px;
-    opacity: 20%;
+    font-size: 25px;
+    opacity: 50%;
     cursor: pointer;
 }
 
-.user {
+/* Tasks section */
+.tasks {
     grid-column: 10/ 13;
     grid-row: 1 / 10;
     border-left: 1px;
     border-color: #acacac;
     border-style: solid;
+    background-color: #ebebebc4;
 } 
 
-.user__collections-title {
+.tasks__board {
+    display: flex;
+    align-content: space-between;
+    flex-direction: column;
+    height: auto;
+}
+
+.tasks__header {
+    margin: 20px;
+}
+
+.tasks__title {
     font-size: 1.3rem;
     font-weight: 400;
     margin: 10px auto;
 }
 
-.user__collections-form {
-    display: flex;
-    flex-direction: column;
-}
-
-.user__task-board {
-    max-height: 90vh;
+.tasks__collections {
+    max-height: 82vh;
     overflow-y: auto;
-    background-color: #ebebebc4;
     padding: 0.1vw;
 }
 
-.user__task-board-item {
+.tasks__collection-item {
     position: relative;
     word-wrap: break-word;
     padding: 10px 40px;
@@ -242,36 +252,15 @@ body {
     border-radius: 3px;
 }
 
-.user__task-board-item:hover {
+.dragActive {
     transform: scale(1.01);
     background-color: #476de9;
-    border-color: #476de9;
+    border-color: #525252;
     color: white;
 }
 
-.user__task-board-item:active {
-    transform: scale(1.01);
-    background-color: #476de9;
-    color: white;
-}
-
-.user__task-board-item:focus {
-    transform: scale(1.01);
-    background-color: #476de9;
-    color: white;
-}
-
-.user__item-delete-icon {
-    position: absolute;
-    right: 20px;
-    top: 12px;
-    font-size: 15px;
-    opacity: 100%;
-    cursor: pointer;
-    filter: invert(80%)
-}
-
-.user__task-board-collection {
+.tasks__collection {
+    position: relative;
     background-color: rgb(255, 255, 255);
     border-width: 1px;
     border-style: solid;
@@ -280,32 +269,50 @@ body {
     display: flex;
     flex-direction: column;
     margin: 10px 1vw;
-    padding: 0.5vw;
+    padding: 1vw 0.5vw;
 }
 
-.user__collection-input::placeholder {
+.tasks__collection span {
+    margin: 10px 0;
+}
+
+.tasks__collection-input::placeholder {
     text-align:center;
 }
 
-.user__task-form {
-    display: block;
+.tasks__collection-delete-icon {
+    position: absolute;
+    right: 25px;
+    font-size: 15px;
+    opacity: 30%;
+    cursor: pointer;
+    filter: invert(80%)
+}
+
+.tasks__collection-item-form {
     height: 9.2vh;
-    background-color: #ebebebc4;
     border: 0px;
+    border-radius: 3px;
 }
 
-.user__task-form:hover {
-    background-color: #476de9;
-}
-
-.user__task-input {
+.tasks__collection-item-form-input {
     height: 50%;
     width: 80%;
-    margin:  2.3vh auto;
+    margin: 3vh auto;
 }
 
-.user__task-input::placeholder {
+.tasks__collection-item-form-input::placeholder {
     text-align:center;
+}
+
+.tasks__collection-item-delete-icon {
+    position: absolute;
+    right: 20px;
+    top: 12px;
+    font-size: 15px;
+    opacity: 30%;
+    cursor: pointer;
+    filter: invert(80%)
 }
 
 .hidden {
@@ -330,58 +337,67 @@ body {
         display: none;
     }
 
-    .task {
+    .finder {
         grid-column: 1;
-        grid-row: 1 /  3;
+        grid-row: 3 / 5;
         height: 100vh;
         margin: 0;
         padding: 10px;
-        scroll-snap-align: start;
+        scroll-snap-align: end;
         background-image: none;
         color: black;
     }
 
-    .task:hover {
+    .finder:hover {
         background-image: none;
         color: black;
     }
 
-    .task__name {
+    .finder__name {
         font-size: 2rem;
     }
 
-    .task__full-page {
+    .finder__full-page {
         font-size: 1rem;
         padding: 10px;
     }
 
-    .user {
-        margin: 0;
-        height: 100vh;
-        grid-column: 1;
-        grid-row: 3 / 5;
-        scroll-snap-align: start;
-        /* position: relative; */
+    .finder__full-page-close-icon {
+        position: absolute;
+        right: 5vw;
+        top: 3vw;
+        font-size: 20px;
+        opacity: 30%;
     }
 
-    .user__task-board-item:focus {
+    .tasks {
+        margin: 0;
+        grid-column: 1;
+        grid-row: 1 /  3;
+        scroll-snap-align: end;
+        height: 100vh;
+    }
+
+    .tasks__header {
+        margin-top: 2vh;
+    }
+
+    .tasks__collections {
+        padding-bottom: 20px;
+    }
+
+    .tasks__collection-item:focus {
         transform: scale(1.01);
         background-color: #476de9;
         color: white;
     }
 
-    .user__task-form {
-        position: sticky;
-        bottom: 50px;  
+    .tasks__collection-item-form {
+        border-radius: 3px;
     }
 
-    .user__task-input {
+    .tasks__collection-item-form-input {
         border-radius: 4px;
-        height: 32px;
-    }
-
-    .user__task-input:active {
-        margin: auto 0;
         height: 32px;
     }
 }

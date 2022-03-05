@@ -5,7 +5,7 @@ import './styles.css'
 import TaskCollections from '../components/sections/TaskCollections'
 import { idGenerator } from '../lib/utils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHamburger } from '@fortawesome/free-solid-svg-icons'
+import { faSliders } from '@fortawesome/free-solid-svg-icons'
 
 
 export default function Home() {
@@ -40,56 +40,58 @@ export default function Home() {
   }, [edit]);
 
   return <div className="home"> 
-     <>
-        <div className={hidden? "hidden":"sidebar"}>
-          <div className="sidebar__profile">
-            {edit? 
-              <form 
-                className="sidebar__profile-name"
-                onSubmit={() => {
-                  setUserName(inputRef.current!.value)
-                  setEdit(false)
-                }
-              }>
-                <input 
-                  type="text" 
-                  ref={inputRef} 
-                  defaultValue={userName}
-                  onBlur={() => setEdit(false)}
-                /> 
-              </form> : 
-              <span className="sidebar__profile-name" onDoubleClick={() => setEdit(true)}>{userName}</span>
+    <div className={hidden? "hidden":"sidebar"}>
+      <div className="sidebar__profile">
+          {edit? 
+          <form 
+            className="sidebar__profile-name"
+            onSubmit={() => {
+              setUserName(inputRef.current!.value)
+              setEdit(false)
             }
-          </div>
-          <div className="sidebar__navigation"> 
-            <span className="sidebar__navigation-title">Menu</span>
-            <ul className="sidebar__navigation-list">
-              <li><Link to="/tasks" >My tasks</Link></li>
-              <li><Link to="/" >Projects</Link></li>
-              <li><Link to="/" >Settings</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className={hidden? "hidden" : "greetings" }>
-          <span className="greetings__main">Hi, {userName.split(" ", 1)}</span>
-          <span className="greetings__subtitle">Ready to do some work?</span> 
-        </div>
-        <div className={hidden? "task__full-page" : "task" }>
-          <h1 className="task__ name">{chosenTask.name}</h1>
-          <span className="task__collection">{chosenCollection}</span>
-          <button className="task__search-button" onClick={fetchTask}>
-            Find a task
-          </button>
-          <FontAwesomeIcon 
-            icon={faHamburger} 
-            className={hidden? "task__full-page-close-icon" : "hidden"}
-            onClick = {() => setHidden(false)}
-          />
-        </div>
-        <div className={hidden? "hidden": "user"}>
-          <TaskCollections setCollections={setCollections} />
-        </div>
-      </>
-     
+          }>
+            <input 
+              type="text" 
+              ref={inputRef} 
+              defaultValue={userName}
+              onBlur={() => setEdit(false)}
+            /> 
+          </form> : 
+          <span 
+            className="sidebar__profile-name" 
+            onDoubleClick={() => setEdit(true)}
+          >
+            {userName}
+          </span>
+        }
+      </div>
+      <div className="sidebar__navigation"> 
+        <span className="sidebar__navigation-title">Menu</span>
+        <ul className="sidebar__navigation-list">
+          <li><Link to="/tasks" >My tasks</Link></li>
+          <li><Link to="/projects" >Projects</Link></li>
+          <li><Link to="/settings" >Settings</Link></li>
+        </ul>
+      </div>
+    </div>
+    <div className={hidden? "hidden" : "greetings" }>
+      <span className="greetings__main">Hi, {userName.split(" ", 1)}</span>
+      <span className="greetings__subtitle">Ready to do some work?</span> 
+    </div>
+    <div className={hidden? "finder__full-page" : "finder" }>
+      <h1 className="finder__name">{chosenTask.name}</h1>
+      <span className="finder__collection">{chosenCollection}</span>
+      <button className="finder__search-button" onClick={fetchTask}>
+        Find a task
+      </button>
+      <FontAwesomeIcon 
+        icon={faSliders} 
+        className={hidden? "finder__full-page-close-icon" : "hidden"}
+        onClick = {() => setHidden(false)}
+      />
+    </div>
+    <div className={hidden? "hidden": "tasks"}>
+      <TaskCollections setCollections={setCollections} />
+    </div>
   </div>
 } 
