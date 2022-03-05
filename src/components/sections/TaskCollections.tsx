@@ -162,7 +162,7 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
 
   useEffect(() => {
     setCollections(collections)
-  }, [])
+  })
 
   useEffect(() => {
     setCollections(collections)

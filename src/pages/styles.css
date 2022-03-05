@@ -78,7 +78,7 @@ body {
 .greetings {
     display: flex;
     flex-flow: column wrap;
-    justify-content:end;
+    justify-content: center;
     text-align: start;
     grid-column: 3 / 10;;
     grid-row: 1 / 2;
