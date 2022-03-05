@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useReducer } from 'react';
+import React, {useRef} from 'react';
 import {Action} from '../../types/types'
 
 const TaskCollectionsHeader: React.FC<{dispatch: React.Dispatch<Action>}> = ({dispatch}) => {
@@ -16,17 +16,17 @@ const TaskCollectionsHeader: React.FC<{dispatch: React.Dispatch<Action>}> = ({di
     }
 
     return (
-        <div className="user__collection-header">
-            <h2 className="user__collections-title">My tasks</h2>
+        <div className="tasks__header">
+            <h2 className="tasks__title">My tasks</h2>
             <form 
-                className="user__collection-form" 
+                className="tasks__collection-form" 
                 onSubmit={handleNewCollection}
             >
                 <input 
-                type="text" 
-                className="user__collection-input" 
-                ref={inputRef}
-                placeholder="Add a new collection"
+                    type="text" 
+                    className="tasks__collection-input" 
+                    ref={inputRef}
+                    placeholder="Add a new collection"
                 />
           </form>
         </div>
