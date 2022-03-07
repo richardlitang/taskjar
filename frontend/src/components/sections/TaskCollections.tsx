@@ -11,10 +11,11 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
 
   const localData = localStorage.getItem('collections')
   let initialCollections: Collection[] = [];
-  
+
   if (localData) {
     initialCollections= JSON.parse(localData)
   } else {
+    
     initialCollections =  [
       {
         id: 0,
@@ -160,9 +161,7 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
     }
   }
 
-  useEffect(() => {
-    setCollections(collections)
-  })
+
 
   useEffect(() => {
     setCollections(collections)
