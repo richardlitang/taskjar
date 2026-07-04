@@ -18,6 +18,7 @@ export interface Action {
     name?: string,
     collection?: number,
     task?: number,
+    restoredTask?: Task,
     updatedCollection?: Collection,
     updatedSource?: Collection,
     updatedDestination?: Collection

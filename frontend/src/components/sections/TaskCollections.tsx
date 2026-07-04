@@ -7,7 +7,24 @@ import {DragDropContext, Droppable, Draggable, DropResult} from 'react-beautiful
 import {idGenerator} from '../../lib/utils'
 import TaskCollectionsHeader from './TaskCollectionsHeader'
 
-const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAction<Collection[]>>}> = ({setCollections}) => {
+type CompleteTaskRequest = {
+  collectionId: number;
+  taskId: number;
+  requestId: number;
+}
+
+type RestoreTaskRequest = {
+  collectionId: number;
+  collectionName: string;
+  task: Task;
+  requestId: number;
+}
+
+const TaskCollections: React.FC<{
+  setCollections: React.Dispatch<React.SetStateAction<Collection[]>>,
+  completeTaskRequest?: CompleteTaskRequest | null,
+  restoreTaskRequest?: RestoreTaskRequest | null
+}> = ({setCollections, completeTaskRequest, restoreTaskRequest}) => {
 
   const localData = localStorage.getItem('collections')
   let initialCollections: Collection[] = [];
@@ -44,13 +61,18 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
           return state;
         }
 
-        if (!state.some(collection => collection.id === action.collection)) {
-         action.collection = state[0].id
-        } 
+        if (state.length === 0) {
+          return state;
+        }
+
+        const requestedCollection = action.collection
+        const targetCollection = requestedCollection !== undefined && state.some(collection => collection.id === requestedCollection)
+          ? requestedCollection
+          : state[0].id
 
         const newTask: Task = {name: action.name, id: idGenerator()}
         return state.map((collection) => {
-          if (collection.id === action.collection) {
+          if (collection.id === targetCollection) {
             return {
               ...collection,
               tasks: [...collection.tasks, newTask]
@@ -83,6 +105,36 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
           }
         return collection;
       });
+      case 'restoreTask':
+        if (action.collection === undefined || !action.restoredTask) {
+          return state;
+        }
+
+        if (!state.some(collection => collection.id === action.collection)) {
+          return [
+            ...state,
+            {
+              id: action.collection,
+              name: action.name || 'Restored jar',
+              tasks: [action.restoredTask]
+            }
+          ];
+        }
+
+        return state.map((collection) => {
+          if (collection.id !== action.collection) {
+            return collection;
+          }
+
+          if (collection.tasks.some(task => task.id === action.restoredTask!.id)) {
+            return collection;
+          }
+
+          return {
+            ...collection,
+            tasks: [...collection.tasks, action.restoredTask!]
+          };
+        });
       case 'addCollection':
         if (!action.name) {
           return state;
@@ -107,6 +159,9 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
   }, initialCollections);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<number | ''>(initialCollections[0]?.id ?? '');
+  const [pendingDeleteCollectionId, setPendingDeleteCollectionId] = useState<number | null>(null);
+  const serializedCollections = JSON.stringify(collections);
 
   const handleSubmit = (event: React.FormEvent )  => {
     event.preventDefault()
@@ -114,7 +169,7 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
     dispatch({
       type: 'add',
       name: inputRef.current!.value,
-      collection: 0
+      collection: selectedCollectionId === '' ? undefined : selectedCollectionId
     });
 
     inputRef.current!.value = '';
@@ -146,8 +201,8 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
         })
       }
     } else {
-      const sourceCollectionCopy = collections.find(collection => collection.id == sourceId)
-      const destinationCollectionCopy = collections.find(collection => collection.id == destinationId)
+      const sourceCollectionCopy = collections.find(collection => collection.id === sourceId)
+      const destinationCollectionCopy = collections.find(collection => collection.id === destinationId)
       
       const jumper = sourceCollectionCopy!.tasks[source.index]
       sourceCollectionCopy!.tasks.splice(source.index, 1)
@@ -165,9 +220,50 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
 
   useEffect(() => {
     setCollections(collections)
-    const updatedCollections = JSON.stringify(collections)
-    localStorage.setItem('collections', updatedCollections)
-  }, [JSON.stringify(collections)])
+    localStorage.setItem('collections', serializedCollections)
+  }, [collections, serializedCollections, setCollections])
+
+  useEffect(() => {
+    if (!completeTaskRequest) {
+      return;
+    }
+
+    dispatch({
+      type: 'delete',
+      collection: completeTaskRequest.collectionId,
+      task: completeTaskRequest.taskId
+    });
+  }, [completeTaskRequest])
+
+  useEffect(() => {
+    if (!restoreTaskRequest) {
+      return;
+    }
+
+    dispatch({
+      type: 'restoreTask',
+      collection: restoreTaskRequest.collectionId,
+      name: restoreTaskRequest.collectionName,
+      restoredTask: restoreTaskRequest.task
+    });
+  }, [restoreTaskRequest])
+
+  useEffect(() => {
+    if (collections.length === 0) {
+      setSelectedCollectionId('');
+      return;
+    }
+
+    if (!collections.some(collection => collection.id === selectedCollectionId)) {
+      setSelectedCollectionId(collections[0].id);
+    }
+  }, [collections, selectedCollectionId])
+
+  useEffect(() => {
+    if (pendingDeleteCollectionId !== null && !collections.some(collection => collection.id === pendingDeleteCollectionId)) {
+      setPendingDeleteCollectionId(null);
+    }
+  }, [collections, pendingDeleteCollectionId])
   
   const [edit, setEdit] = useState<number>(0);
 
@@ -179,7 +275,7 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
     <div className="tasks__board">
         <div className="tasks__collections">
           <DragDropContext onDragEnd={onDragEnd}>
-            <TaskCollectionsHeader dispatch={dispatch}/>
+            <TaskCollectionsHeader dispatch={dispatch} collections={collections}/>
               {collections.map((collection: Collection) => {
                 return <Droppable droppableId={JSON.stringify(collection.id)} key={collection.id}>
                 {(provided) => (  
@@ -188,34 +284,70 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
                     {...provided.droppableProps}
                     className="tasks__collection"
                   >
-                    <span>
-                      <span>{collection.name}</span>
-                      <FontAwesomeIcon 
-                        icon={faTrash} 
-                        className="tasks__collection-delete-icon" 
-                        onClick={() => dispatch({
-                          type: 'deleteCollection',
-                          collection: collection.id,
-                        })}
-                      />
-                    </span>
-                    
+                    <div className="tasks__collection-header">
+                      <span className="tasks__collection-name">{collection.name}</span>
+                      <span className="tasks__collection-count">
+                        {collection.tasks.length} {collection.tasks.length === 1 ? 'task' : 'tasks'}
+                      </span>
+                      <button
+                        type="button"
+                        className="tasks__collection-delete-button"
+                        aria-label={`Delete ${collection.name} jar`}
+                        onClick={() => setPendingDeleteCollectionId(collection.id)}
+                      >
+                        <FontAwesomeIcon
+                          icon={faTrash}
+                          className="tasks__collection-delete-icon"
+                        />
+                      </button>
+                    </div>
+
+                    {pendingDeleteCollectionId === collection.id && (
+                      <div className="tasks__collection-delete-confirm">
+                        <span>Delete this jar?</span>
+                        <button
+                          type="button"
+                          className="tasks__collection-keep-button"
+                          onClick={() => setPendingDeleteCollectionId(null)}
+                        >
+                          Keep
+                        </button>
+                        <button
+                          type="button"
+                          className="tasks__collection-confirm-button"
+                          aria-label={`Confirm delete ${collection.name} jar`}
+                          onClick={() => {
+                            dispatch({
+                              type: 'deleteCollection',
+                              collection: collection.id,
+                            })
+                            setPendingDeleteCollectionId(null)
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+
+                    {collection.tasks.length === 0 && (
+                      <p className="tasks__collection-empty">Drop a task here or add one below.</p>
+                    )}
+
                     {collection.tasks.map((task, index) => {
-                      return <Draggable 
-                        draggableId={task.id.toString()} 
+                      return <Draggable
+                        draggableId={task.id.toString()}
                         key={task.id}
                         index={index}
                       >
                         {(provided, snapshot) => (
-                          <div 
+                          <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            {...provided.dragHandleProps}
                             className={`tasks__collection-item ${snapshot.isDragging? 'dragActive': ''}`}
                           >
-                            {edit === task.id? 
-                              <form 
-                                className="tasks__collection-item-form" 
+                            {edit === task.id?
+                              <form
+                                className="tasks__collection-item-form"
                                 onSubmit={() => {
                                   dispatch({
                                     type: 'edit',
@@ -226,33 +358,41 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
                                   setEdit(0)
                                 }}
                               >
-                                <input 
-                                  type="text" 
-                                  className="tasks__collection-item-input" 
+                                <input
+                                  type="text"
+                                  className="tasks__collection-item-input"
                                   ref={inputRef}
                                   defaultValue={task.name}
                                   onBlur={() => setEdit(0)}
                                 />
                               </form>
-                              : <span onDoubleClick={() => 
-                                setEdit(task.id)
-                              }>
+                              : <span
+                                {...provided.dragHandleProps}
+                                className="tasks__collection-item-name"
+                                onDoubleClick={() => setEdit(task.id)}
+                              >
                                 {task.name}
                               </span>
                             }
-                            
-                            <FontAwesomeIcon 
-                              icon={faCircleMinus} 
-                              className="tasks__collection-item-delete-icon" 
+
+                            <button
+                              type="button"
+                              className="tasks__collection-item-delete-button"
+                              aria-label={`Delete ${task.name}`}
                               onClick={() => dispatch({
                                 type: 'delete',
                                 collection: collection.id,
                                 task: task.id
                               })}
-                            />
+                            >
+                              <FontAwesomeIcon
+                                icon={faCircleMinus}
+                                className="tasks__collection-item-delete-icon"
+                              />
+                            </button>
                           </div>
                         )}
-                        
+
                       </Draggable>
                     })}
                     {provided.placeholder}  
@@ -268,11 +408,28 @@ const TaskCollections: React.FC<{setCollections: React.Dispatch<React.SetStateAc
           className="tasks__collection-item-form" 
           onSubmit={handleSubmit}
         >
+          <label className="tasks__collection-picker">
+            <span>Into</span>
+            <select
+              aria-label="Choose jar"
+              value={selectedCollectionId}
+              onChange={(event) => setSelectedCollectionId(Number(event.target.value))}
+              disabled={collections.length === 0}
+            >
+              {collections.map((collection) => (
+                <option value={collection.id} key={collection.id}>
+                  {collection.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <input 
             type="text" 
             className="tasks__collection-item-form-input" 
             ref={inputRef}
-            placeholder="Add a new task"
+            aria-label="New task"
+            placeholder="Add a task"
+            disabled={collections.length === 0}
           />
         </form>
       </div>
