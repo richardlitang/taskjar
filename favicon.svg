@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="TaskJar">
+  <rect width="64" height="64" rx="14" fill="#f7f4ee"/>
+  <rect x="22" y="11" width="20" height="5" rx="2.5" fill="#a8b49e"/>
+  <rect x="18" y="20" width="28" height="32" rx="9" fill="#5f7d5b"/>
+  <path d="M21 26c2.8-2.6 6.5-4 11-4s8.2 1.4 11 4v7H21z" fill="#7f9c76"/>
+  <path d="M22 22h20" stroke="#fffdf8" stroke-opacity=".48" stroke-width="3" stroke-linecap="round"/>
+</svg>
