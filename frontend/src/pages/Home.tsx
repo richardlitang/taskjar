@@ -32,6 +32,10 @@ type StarterCollectionsRequest = {
 }
 
 type OnboardingStep = 'name' | 'shelf';
+type DrawPhase = 'idle' | 'choosing' | 'doing' | 'completed';
+
+export const DRAW_REVEAL_DELAY_MS = 820;
+const drawCollectionStorageKey = 'drawCollectionIds';
 
 const starterPresets: StarterPreset[] = [
   {
@@ -96,10 +100,38 @@ const buildStarterCollections = (presetId: StarterPresetId): Collection[] => {
   }
 }
 
+const parseStoredDrawCollectionIds = (storedValue: string | null): number[] => {
+  if (!storedValue) {
+    return [];
+  }
+
+  try {
+    const parsedValue = JSON.parse(storedValue);
+    return Array.isArray(parsedValue)
+      ? parsedValue.filter((value): value is number => typeof value === 'number')
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+const parseStoredUserName = (storedValue: string | null): string => {
+  if (!storedValue) {
+    return '';
+  }
+
+  try {
+    const parsedValue = JSON.parse(storedValue);
+    return typeof parsedValue === 'string' ? parsedValue : '';
+  } catch {
+    return storedValue;
+  }
+}
+
 export default function Home() {
   const localUser = localStorage.getItem('user')
   const localCollections = localStorage.getItem('collections')
-  const storedUserName: string = localUser ? JSON.parse(localUser) : '';
+  const storedUserName: string = parseStoredUserName(localUser);
   const initialUserName = storedUserName && storedUserName !== 'Stranger' ? storedUserName : defaultUserName;
 
   const [userName, setUserName] = useState<string>(initialUserName)
@@ -114,33 +146,108 @@ export default function Home() {
   const [hidden, setHidden] = useState<boolean>(true)
   const [edit, setEdit] = useState<boolean>(false);
   const [drawNotice, setDrawNotice] = useState<string>('Add a few task slips to your jars, then draw one.')
+  const [drawPhase, setDrawPhase] = useState<DrawPhase>('idle')
+  const [selectedDrawCollectionIds, setSelectedDrawCollectionIds] = useState<number[]>(() => parseStoredDrawCollectionIds(localStorage.getItem(drawCollectionStorageKey)))
   const [completeTaskRequest, setCompleteTaskRequest] = useState<CompleteTaskRequest | null>(null)
   const [restoreTaskRequest, setRestoreTaskRequest] = useState<RestoreTaskRequest | null>(null)
   const [lastCompletedTask, setLastCompletedTask] = useState<RestoreTaskRequest | null>(null)
   const [starterCollectionsRequest, setStarterCollectionsRequest] = useState<StarterCollectionsRequest | null>(null)
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const drawTimeoutRef = useRef<number | null>(null);
   const hasDrawnTask = chosenCollectionId !== null && chosenTask.name.length > 0
   const shelfOpen = !hidden
+  const isChoosingTask = drawPhase === 'choosing'
+  const isDoingTask = drawPhase === 'doing' && hasDrawnTask
+  const validSelectedDrawCollectionIds = selectedDrawCollectionIds.filter(collectionId => (
+    collections.some(collection => collection.id === collectionId)
+  ))
+  const isDrawFilterLimited = validSelectedDrawCollectionIds.length > 0
+  const drawFilterLabel = !isDrawFilterLimited
+    ? 'All jars'
+    : validSelectedDrawCollectionIds.length === 1
+      ? collections.find(collection => collection.id === validSelectedDrawCollectionIds[0])?.name || '1 jar'
+      : `${validSelectedDrawCollectionIds.length} jars`
+  const collectionIsSelectedForDraw = (collectionId: number) => (
+    !isDrawFilterLimited || validSelectedDrawCollectionIds.includes(collectionId)
+  )
+  const filteredCollections = collections.filter(collection => (
+    collectionIsSelectedForDraw(collection.id)
+  ))
+  const totalSlipCount = collections.reduce((count, collection) => count + collection.tasks.length, 0)
+  const canFilterDrawCollections = collections.length > 1
+
+  const toggleDrawCollection = (collectionId: number) => {
+    setSelectedDrawCollectionIds((currentIds) => {
+      const currentValidIds = currentIds.filter(id => collections.some(collection => collection.id === id))
+      if (currentValidIds.length === 0) {
+        return [collectionId]
+      }
+
+      const collectionIsSelected = currentValidIds.includes(collectionId)
+      const nextIds = collectionIsSelected
+        ? currentValidIds.filter(id => id !== collectionId)
+        : [...currentValidIds, collectionId]
+
+      return nextIds.length === collections.length ? [] : nextIds
+    })
+  }
+
+  const clearPendingDraw = () => {
+    if (drawTimeoutRef.current) {
+      window.clearTimeout(drawTimeoutRef.current)
+      drawTimeoutRef.current = null
+    }
+  }
 
   const fetchTask = () => {
-    const nonEmptyCollections = collections.filter(collection => collection.tasks.length > 0)
-    if (nonEmptyCollections.length === 0) {
+    if (isChoosingTask) {
+      return
+    }
+
+    clearPendingDraw()
+    const allNonEmptyCollections = collections.filter(collection => collection.tasks.length > 0)
+    const nonEmptyCollections = filteredCollections.filter(collection => collection.tasks.length > 0)
+    if (allNonEmptyCollections.length === 0) {
       setChosenTask({name: 'Add a task to start drawing', id: idGenerator()})
       setChosenCollection('')
       setChosenCollectionId(null)
       setDrawNotice('Create a task in any jar, then draw one when you are ready.')
+      setDrawPhase('idle')
+      setHidden(false)
+      return
+    }
+
+    if (nonEmptyCollections.length === 0) {
+      setChosenTask({name: 'No slips here', id: idGenerator()})
+      setChosenCollection('')
+      setChosenCollectionId(null)
+      setDrawNotice('Choose another jar or add a slip to this draw pool.')
+      setDrawPhase('idle')
       setHidden(false)
       return
     }
 
     const randomCollection = Math.floor((Math.random() * nonEmptyCollections.length));
-    const randomTask = Math.floor((Math.random() * nonEmptyCollections[randomCollection].tasks.length));  
-    setChosenTask(nonEmptyCollections[randomCollection].tasks[randomTask]) 
-    setChosenCollection(nonEmptyCollections[randomCollection].name)
-    setChosenCollectionId(nonEmptyCollections[randomCollection].id)
-    setDrawNotice('One task slip, one next step.')
+    const randomTask = Math.floor((Math.random() * nonEmptyCollections[randomCollection].tasks.length));
+    const nextCollection = nonEmptyCollections[randomCollection]
+    const nextTask = nextCollection.tasks[randomTask]
+
+    setDrawPhase('choosing')
+    setChosenTask({name: '', id: idGenerator()})
+    setChosenCollection('')
+    setChosenCollectionId(null)
+    setDrawNotice('Choosing a slip...')
     setHidden(true)
+
+    drawTimeoutRef.current = window.setTimeout(() => {
+      setChosenTask(nextTask)
+      setChosenCollection(nextCollection.name)
+      setChosenCollectionId(nextCollection.id)
+      setDrawNotice('Do this one next.')
+      setDrawPhase('doing')
+      drawTimeoutRef.current = null
+    }, DRAW_REVEAL_DELAY_MS)
   } 
 
   const completeTask = () => {
@@ -148,6 +255,7 @@ export default function Home() {
       return
     }
 
+    clearPendingDraw()
     setCompleteTaskRequest({
       collectionId: chosenCollectionId,
       taskId: chosenTask.id,
@@ -163,6 +271,7 @@ export default function Home() {
     setChosenCollection('')
     setChosenCollectionId(null)
     setDrawNotice('Task cleared from the jar. Draw again when you are ready.')
+    setDrawPhase('completed')
     setHidden(true)
   }
 
@@ -179,6 +288,7 @@ export default function Home() {
     setChosenCollection('')
     setChosenCollectionId(null)
     setDrawNotice(`${lastCompletedTask.task.name} is back in ${lastCompletedTask.collectionName}.`)
+    setDrawPhase('idle')
     setLastCompletedTask(null)
     setHidden(true)
   }
@@ -214,6 +324,31 @@ export default function Home() {
   useEffect(() => {
     inputRef.current?.focus();
   }, [edit]);
+
+  useEffect(() => {
+    const nextSelectedIds = selectedDrawCollectionIds.filter(collectionId => (
+      collections.some(collection => collection.id === collectionId)
+    ))
+    const normalizedSelectedIds = nextSelectedIds.length === collections.length ? [] : nextSelectedIds
+
+    if (
+      normalizedSelectedIds.length !== selectedDrawCollectionIds.length ||
+      normalizedSelectedIds.some((collectionId, index) => collectionId !== selectedDrawCollectionIds[index])
+    ) {
+      setSelectedDrawCollectionIds(normalizedSelectedIds)
+      return
+    }
+
+    localStorage.setItem(drawCollectionStorageKey, JSON.stringify(normalizedSelectedIds))
+  }, [collections, selectedDrawCollectionIds]);
+
+  useEffect(() => {
+    return () => {
+      if (drawTimeoutRef.current) {
+        window.clearTimeout(drawTimeoutRef.current)
+      }
+    }
+  }, []);
 
   return <div className={`home ${shelfOpen ? 'home--shelf' : 'home--focus'}`}>
     <button
@@ -253,18 +388,68 @@ export default function Home() {
       }
       <span className="greetings__subtitle">Choose what to do next.</span>
     </div>
-    <div className={`finder ${hasDrawnTask ? "finder--drawn" : ""}`}>
-      <h1 className="finder__name">{chosenTask.name || 'What should I do next?'}</h1>
+    <div className={`finder ${hasDrawnTask ? "finder--drawn" : ""} ${isChoosingTask ? "finder--choosing" : ""} ${isDoingTask ? "finder--doing" : ""} ${drawPhase === 'completed' ? "finder--completed" : ""}`}>
+      {isChoosingTask && (
+        <div className="finder__draw-stage" aria-hidden="true">
+          <span className="finder__slip finder__slip--one" />
+          <span className="finder__slip finder__slip--two" />
+          <span className="finder__slip finder__slip--three" />
+        </div>
+      )}
+      <h1 className="finder__name">{chosenTask.name || (isChoosingTask ? 'Drawing...' : 'What should I do next?')}</h1>
       <span className={chosenCollection ? "finder__collection" : "finder__collection finder__collection--muted"}>
         {chosenCollection || drawNotice}
       </span>
-      <div className="finder__actions">
-        <button className="finder__search-button" onClick={fetchTask}>
-          {hasDrawnTask ? 'Draw another' : 'Draw a task'}
-        </button>
+      {canFilterDrawCollections && (
+        <div className="finder__draw-filter" role="group" aria-label="Draw from jars">
+          <span className="finder__filter-label">Draw from</span>
+          <div className="finder__filter-options">
+            <button
+              className={`finder__filter-option ${!isDrawFilterLimited ? 'finder__filter-option--selected' : ''}`}
+              type="button"
+              onClick={() => setSelectedDrawCollectionIds([])}
+              aria-pressed={!isDrawFilterLimited}
+            >
+              <span>All jars</span>
+              <small>{totalSlipCount} {totalSlipCount === 1 ? 'slip' : 'slips'}</small>
+            </button>
+            {collections.map((collection) => {
+              const collectionSelected = isDrawFilterLimited && validSelectedDrawCollectionIds.includes(collection.id)
+
+              return (
+                <button
+                  className={`finder__filter-option ${collectionSelected ? 'finder__filter-option--selected' : ''}`}
+                  type="button"
+                  key={collection.id}
+                  onClick={() => toggleDrawCollection(collection.id)}
+                  aria-pressed={collectionSelected}
+                >
+                  <span>{collection.name}</span>
+                  <small>{collection.tasks.length} {collection.tasks.length === 1 ? 'slip' : 'slips'}</small>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      <div className="finder__actions" aria-busy={isChoosingTask}>
+        {hasDrawnTask ? (
+          <button
+            className="finder__secondary-button"
+            onClick={fetchTask}
+            disabled={isChoosingTask}
+            aria-label={`Draw another from ${drawFilterLabel}`}
+          >
+            Draw another
+          </button>
+        ) : (
+          <button className="finder__search-button" onClick={fetchTask} disabled={isChoosingTask}>
+            {isChoosingTask ? 'Choosing...' : 'Draw a task'}
+          </button>
+        )}
         {hasDrawnTask && (
-          <button className="finder__secondary-button" onClick={completeTask}>
-            Complete task
+          <button className="finder__search-button" onClick={completeTask} aria-label="Mark complete task">
+            Mark complete
           </button>
         )}
         {!hasDrawnTask && lastCompletedTask && (

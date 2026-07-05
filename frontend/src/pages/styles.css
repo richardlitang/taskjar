@@ -8,6 +8,9 @@
     --ink-muted: #81786d;
     --jar: #5f7d5b;
     --jar-deep: #526f4e;
+    --slip: #fff4c7;
+    --slip-edge: #dfc677;
+    --wax: #b76548;
     --line-soft: rgba(72, 64, 50, 0.1);
     --line-strong: rgba(72, 64, 50, 0.16);
     --lift-soft: 0 18px 48px rgba(62, 51, 37, 0.08);
@@ -229,7 +232,7 @@ select {
     min-height: 100vh;
     color: var(--ink);
     margin: 0;
-    padding: 92px clamp(32px, 8vw, 112px) 72px;
+    padding: 70px clamp(32px, 8vw, 112px) 124px;
     text-align: center;
     transition: padding .22s ease-out;
 }
@@ -289,12 +292,12 @@ select {
 }
 
 .finder__name {
-    font-size: clamp(3.9rem, 8.4vw, 7.6rem);
+    font-size: clamp(3.7rem, 7.1vw, 6.35rem);
     font-weight: 760;
     letter-spacing: 0;
-    line-height: 0.94;
+    line-height: 0.96;
     margin: 0;
-    max-width: min(700px, 100%);
+    max-width: min(920px, 100%);
 }
 
 .finder__collection {
@@ -343,18 +346,180 @@ select {
 }
 
 .finder--drawn .finder__name {
-    animation: slipIn .22s ease-out;
+    animation: taskReveal .38s cubic-bezier(.19, 1, .22, 1);
 }
 
-@keyframes slipIn {
+.finder--doing .finder__name {
+    font-size: clamp(3.2rem, 6vw, 5.65rem);
+    line-height: 1;
+    max-width: min(760px, 100%);
+}
+
+@keyframes taskReveal {
     from {
         opacity: 0%;
-        transform: translateY(10px) scale(0.99);
+        filter: blur(4px);
+        transform: translateY(8px) scale(0.985);
     }
 
     to {
         opacity: 100%;
+        filter: blur(0);
         transform: translateY(0) scale(1);
+    }
+}
+
+.finder__draw-stage {
+    align-items: center;
+    display: grid;
+    height: 84px;
+    justify-items: center;
+    margin-bottom: 18px;
+    pointer-events: none;
+    position: relative;
+    width: 164px;
+}
+
+.finder__draw-stage::before {
+    background:
+        linear-gradient(180deg, rgba(255, 253, 248, 0.24), transparent 44%),
+        var(--jar);
+    border-radius: 18px 18px 24px 24px;
+    box-shadow:
+        inset 0 7px 0 rgba(255, 253, 248, 0.2),
+        0 20px 46px rgba(74, 98, 69, 0.14);
+    content: "";
+    height: 58px;
+    opacity: 0;
+    transform: translateY(16px) scale(0.92);
+    transition: opacity .2s ease, transform .24s ease;
+    width: 64px;
+}
+
+.finder__draw-stage::after {
+    background: rgba(95, 125, 91, 0.34);
+    border-radius: 999px;
+    content: "";
+    height: 6px;
+    opacity: 0;
+    position: absolute;
+    top: 8px;
+    transform: translateY(16px) scale(0.86);
+    transition: opacity .2s ease, transform .24s ease;
+    width: 38px;
+}
+
+.finder__slip {
+    background:
+        linear-gradient(180deg, rgba(255, 253, 248, 0.9), rgba(255, 244, 199, 0.96)),
+        var(--slip);
+    border: 1px solid rgba(130, 98, 30, 0.18);
+    border-radius: 5px;
+    box-shadow:
+        0 12px 26px rgba(97, 78, 43, 0.12),
+        inset 0 1px 0 rgba(255, 253, 248, 0.88);
+    height: 34px;
+    opacity: 0;
+    position: absolute;
+    transform: translateY(18px) rotate(0deg) scale(0.8);
+    width: 88px;
+}
+
+.finder__slip::after {
+    background: var(--slip-edge);
+    border-radius: 999px;
+    content: "";
+    height: 3px;
+    left: 14px;
+    opacity: .44;
+    position: absolute;
+    top: 14px;
+    width: 42px;
+}
+
+.finder--choosing .finder__draw-stage::before {
+    opacity: 1;
+    transform: translateY(12px) scale(1);
+}
+
+.finder--choosing .finder__draw-stage::after {
+    opacity: 1;
+    transform: translateY(12px) scale(1);
+}
+
+.finder--choosing .finder__slip {
+    opacity: 1;
+}
+
+.finder--choosing .finder__slip--one {
+    animation: chooseSlipOne .82s cubic-bezier(.2, .72, .2, 1) infinite;
+}
+
+.finder--choosing .finder__slip--two {
+    animation: chooseSlipTwo .82s cubic-bezier(.2, .72, .2, 1) .12s infinite;
+}
+
+.finder--choosing .finder__slip--three {
+    animation: chooseSlipThree .82s cubic-bezier(.2, .72, .2, 1) .24s infinite;
+}
+
+.finder--choosing .finder__name {
+    animation: drawingTitle .82s ease-in-out infinite;
+    color: #4c4437;
+}
+
+@keyframes chooseSlipOne {
+    0% {
+        transform: translate(-44px, 12px) rotate(-12deg) scale(0.9);
+    }
+
+    45% {
+        transform: translate(-12px, -18px) rotate(8deg) scale(1.04);
+    }
+
+    100% {
+        transform: translate(34px, 10px) rotate(14deg) scale(0.92);
+    }
+}
+
+@keyframes chooseSlipTwo {
+    0% {
+        transform: translate(38px, 14px) rotate(13deg) scale(0.88);
+    }
+
+    45% {
+        transform: translate(0, -24px) rotate(-7deg) scale(1.08);
+    }
+
+    100% {
+        transform: translate(-40px, 12px) rotate(-10deg) scale(0.9);
+    }
+}
+
+@keyframes chooseSlipThree {
+    0% {
+        transform: translate(0, 18px) rotate(2deg) scale(0.86);
+    }
+
+    48% {
+        transform: translate(18px, -30px) rotate(10deg) scale(1.1);
+    }
+
+    100% {
+        transform: translate(-18px, 16px) rotate(-8deg) scale(0.88);
+    }
+}
+
+@keyframes drawingTitle {
+    0%,
+    100% {
+        opacity: .62;
+        transform: translateY(0);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateY(-3px);
     }
 }
 
@@ -364,7 +529,83 @@ select {
     flex-wrap: wrap;
     gap: 12px;
     justify-content: center;
-    margin-top: 36px;
+    margin-top: 28px;
+}
+
+.finder__draw-filter {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 26px;
+    max-width: min(720px, 100%);
+    position: relative;
+    z-index: 2;
+}
+
+.finder__filter-label {
+    color: var(--ink-muted);
+    font-size: 0.82rem;
+    font-weight: 720;
+    line-height: 1;
+    padding: 0 2px;
+}
+
+.finder__filter-options {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.finder__filter-option {
+    align-items: center;
+    appearance: none;
+    background: rgba(255, 253, 248, 0.62);
+    border: 1px solid rgba(72, 64, 50, 0.12);
+    border-radius: 999px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 700;
+    gap: 8px;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 12px;
+    text-align: center;
+    transition: background-color .15s, border-color .15s, color .15s, transform .15s, box-shadow .15s;
+}
+
+.finder__filter-option:hover,
+.finder__filter-option:focus {
+    background: rgba(255, 253, 248, 0.92);
+    border-color: rgba(95, 125, 91, 0.24);
+    outline: 0;
+    transform: translateY(-1px);
+}
+
+.finder__filter-option:focus-visible {
+    outline: 3px solid rgba(95, 125, 91, 0.18);
+    outline-offset: 3px;
+}
+
+.finder__filter-option--selected {
+    background: var(--jar);
+    border-color: var(--jar);
+    box-shadow: 0 8px 18px rgba(69, 92, 62, 0.14);
+    color: #fffdf8;
+}
+
+.finder__filter-option small {
+    color: currentColor;
+    font-size: 0.78rem;
+    font-weight: 650;
+    opacity: .72;
+    white-space: nowrap;
 }
 
 .finder__search-button {
@@ -412,6 +653,13 @@ select {
 .finder__search-button:active {
     box-shadow: inset 0 3px 7px rgba(34, 47, 31, 0.24);
     transform: translateY(1px);
+}
+
+.finder__search-button:disabled,
+.finder__secondary-button:disabled {
+    cursor: wait;
+    opacity: .72;
+    transform: none;
 }
 
 .finder__secondary-button {
@@ -1456,6 +1704,11 @@ select {
         max-width: 100%;
     }
 
+    .finder--doing .finder__name {
+        font-size: clamp(2.65rem, 13vw, 4rem);
+        line-height: 1.04;
+    }
+
     .finder__brand {
         margin-bottom: 18px;
     }
@@ -1483,9 +1736,24 @@ select {
         width: 100%;
     }
 
+    .finder__draw-filter {
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .finder__filter-options {
+        width: 100%;
+    }
+
     .finder__search-button,
     .finder__secondary-button {
         min-height: 44px;
+    }
+
+    .finder__draw-stage {
+        height: 72px;
+        margin-bottom: 6px;
+        transform: scale(0.9);
     }
 
     .tasks {
@@ -1648,6 +1916,31 @@ select {
 
     .onboarding__submit {
         width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .finder--drawn .finder__name,
+    .finder--choosing .finder__name,
+    .finder--choosing .finder__slip--one,
+    .finder--choosing .finder__slip--two,
+    .finder--choosing .finder__slip--three {
+        animation: none;
+    }
+
+    .finder--choosing .finder__slip--one {
+        opacity: 1;
+        transform: translate(-28px, -8px) rotate(-8deg) scale(0.96);
+    }
+
+    .finder--choosing .finder__slip--two {
+        opacity: 1;
+        transform: translate(24px, -14px) rotate(7deg) scale(1);
+    }
+
+    .finder--choosing .finder__slip--three {
+        opacity: 1;
+        transform: translate(0, 6px) rotate(1deg) scale(0.92);
     }
 }
 
