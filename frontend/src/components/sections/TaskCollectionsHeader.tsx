@@ -1,41 +1,27 @@
-import React, {useRef} from 'react';
-import {Action, Collection} from '../../types/types'
+import React from 'react';
+import {Collection} from '../../types/types'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPlus } from '@fortawesome/free-solid-svg-icons'
 
-const TaskCollectionsHeader: React.FC<{dispatch: React.Dispatch<Action>, collections: Collection[]}> = ({dispatch, collections}) => {
-    const inputRef = useRef<HTMLInputElement | null>(null);
+const TaskCollectionsHeader: React.FC<{collections: Collection[], onAddJar: () => void}> = ({collections, onAddJar}) => {
     const taskCount = collections.reduce((count, collection) => count + collection.tasks.length, 0);
-
-    const handleNewCollection = (event: React.FormEvent )  => {
-        event.preventDefault()
-    
-        dispatch({
-          type: 'addCollection',
-          name: inputRef.current!.value
-        });
-    
-        inputRef.current!.value = '';
-    }
 
     return (
         <div className="tasks__header">
             <div>
-                <h2 className="tasks__title">Task jars</h2>
+                <h2 className="tasks__title">Your jars</h2>
                 <span className="tasks__subtitle">
-                    {taskCount} {taskCount === 1 ? 'task' : 'tasks'} ready to draw
+                    {taskCount} {taskCount === 1 ? 'slip' : 'slips'} ready
                 </span>
             </div>
-            <form 
-                className="tasks__collection-form" 
-                onSubmit={handleNewCollection}
+            <button
+                className="tasks__shelf-action"
+                type="button"
+                onClick={onAddJar}
             >
-                <input 
-                    type="text" 
-                    className="tasks__collection-input" 
-                    ref={inputRef}
-                    aria-label="New jar name"
-                    placeholder="New jar"
-                />
-          </form>
+                <FontAwesomeIcon icon={faPlus} />
+                <span>New jar</span>
+            </button>
         </div>
     )
 }

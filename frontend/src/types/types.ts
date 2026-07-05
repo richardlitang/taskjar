@@ -19,6 +19,7 @@ export interface Action {
     collection?: number,
     task?: number,
     restoredTask?: Task,
+    collections?: Collection[],
     updatedCollection?: Collection,
     updatedSource?: Collection,
     updatedDestination?: Collection
